@@ -1,0 +1,70 @@
+version: "3.9"
+
+services:
+  token_bridge_redis:
+    container_name: token_bridge_redis
+    image: redis
+    ports:
+      - 6379:6379
+
+  zebec_bridge_redis:
+    container_name: zebec_bridge_redis
+    image: redis
+    ports:
+      - 6380:6379
+
+  guardian_spy:
+    image: ghcr.io/certusone/guardiand:latest
+    entrypoint: /guardiand
+    command: spy --nodeKey /node.key --spyRPC "[::]:7073" --network /wormhole/testnet/2/1 --bootstrap /dns4/wormhole-testnet-v2-bootstrap.certus.one/udp/8999/quic/p2p/12D3KooWAkB9ynDur1Jtoa97LBUp8RXdhzS5uHgAfdTquJbrbN7i
+    ports:
+      - 7073:7073
+
+  token_bridge_relayer:
+    build: ./token_bridge
+    environment:
+      SPY_SERVICE_HOST: .env.sample
+    ports:
+      - 4201:4201
+      - 8083:8083
+    depends_on:
+      - token_bridge_redis
+      - guardian_spy
+
+  zebec_bridge_relayer:
+    build: ./zebec_bridge
+    environment:
+      SPY_SERVICE_HOST: .env.sample
+    ports:
+      - 4202:4202
+      - 8084:8084
+    depends_on:
+      - zebec_bridge_redis
+      - guardian_spy
+  # prometheus:
+  #   container_name: prometheus-svc
+  #   image: prom/prometheus
+  #   ports: 
+  #     - "9090:9090"
+  #   command: 
+  #     - "--config.file=/etc/prometheus/prometheus.yml"
+  #     - "--storage.tsdb.path=/prometheus"
+  #   volumes:
+  #     - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+  #     - ./prometheus/alert.rules.yml:/etc/prometheus/alert.rules.yml
+  #   depends_on: 
+  #     - zebec_bridge_relayer
+  # alertmanager:
+  #   container_name: alertmanager
+  #   image: prom/alertmanager
+  #   ports: 
+  #     - "9093:9093"
+  #   volumes:
+  #     - ./alertmanager:/etc/alertmanager
+  #   command:
+  #     - '--config.file=/etc/alertmanager/alertmanager.yml'
+  #     - '--storage.path=/alertmanager'
+  #   depends_on: 
+  #     - prometheus
+
+

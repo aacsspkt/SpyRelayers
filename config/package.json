@@ -1,0 +1,12 @@
+{
+	"name": "config",
+	"version": "1.0.0",
+	"description": "Prepare config for spy relayer",
+	"main": "index.js",
+	"type": "module",
+	"scripts": {
+		"start": "node ."
+	},
+	"author": "",
+	"license": "ISC"
+}
